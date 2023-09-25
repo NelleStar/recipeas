@@ -1,5 +1,8 @@
 # Ignore virtual environment files
-recipeas/
+capstone/
 
 # Ignore Python bytecode files
 __pycache__/
+
+#Ignore secret.py file
+secret.py
