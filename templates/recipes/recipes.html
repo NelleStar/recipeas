@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Recipes{% endblock %}
+
+{% block content %}
+<h1>Recipes</h1>
+
+<div class="row">
+    {% for recipe in recipes %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <a href="/recipes/{{ recipe.id }}">
+                    <img src="{{ recipe.image }}" class="card-img-top" alt="{{ recipe.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ recipe.title | safe }}</h5>
+                        <!-- Need more details - testing this area for now -->
+                </a>
+
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

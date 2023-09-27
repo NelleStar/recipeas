@@ -19,6 +19,26 @@
 
 </head>
 <body>
+    <div class="navbar navbar-default navbar-static-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="/recipes">Recipeas</a>
+                <a href="/recipes/search">Search</a>
+            </div>
+        </div>    
+        <div >
+            <ul class="nav navbar-nav navbar-right">
+                {% if 'curr_user' not in session %}
+                    <a href="/login">Login</a>
+                    <a href="/signup">Signup</a>
+                {% endif %}
+
+                {% if 'curr_user' in session %}
+                    <a href="/logout">Logout</a>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
     <div>
         {% block content %}
         {% endblock %}

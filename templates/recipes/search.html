@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Recipes{% endblock %}
+
+{% block content %}
+<h1>Search Recipes</h1>
+
+<form method="POST">
+    <label for="diet">Diet:</label>
+    <select name="diet" id="dietSelect">
+        <option value="">All</option>
+    </select><br>
+
+    <label for="cuisine">Cuisine:</label>
+    <select name="cuisine" id="cuisineSelect">
+        <option value="">All</option>
+    </select><br>
+
+    <label for="ingredients">Ingredients:</label>
+    <input type="text" id="ingredients" name="ingredients"><br>
+
+    <input type="submit" value="Search">
+</form>
+
+{% endblock %}

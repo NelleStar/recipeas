@@ -2,6 +2,7 @@ from flask import Flask, redirect, render_template, session, flash, g, request
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from secret import API_SECRET_KEY
+import requests
 
 from werkzeug.security import check_password_hash
 
@@ -136,10 +137,14 @@ def login():
 def logout():
     """Handle user logout"""
 
-    session.pop('curr_user')
-    flash("Successfully logged out. See you soon!")
+    if 'curr_user' in session:
+        session.pop('curr_user')
+        flash("Logged out successfully", "success")
+    else:
+        flash("No user is currently logged in", "info")
+    
+    return redirect("/login")
 
-    return redirect('/login')
 
 ################################################################################
 #user profile and favorites route
@@ -152,11 +157,84 @@ def show_user(user_id):
 
     LINK: Edit profile, delete profile
     """
-    return render_template('/users/profile.html')
+    user = User.query.get_or_404(user_id)
 
-@app.route('/user/<int:user_id>/favorites')
-def show_favorites(user_id):
-    """Show a list of recipe this user has liked
-    
-    LINKED in HEADER once they are logged in?
+    return render_template('/users/profile.html', user=user)
+
+
+################################################################################
+#recipes list and individual page
+@app.route('/recipes')
+def recipes():
     """
+    Show random list of recipes when first accessing the page
+
+    Have Search box to search recipes by ingredient
+
+    Have Search box to search recipes by cuisine style
+
+    Each recipe should have a picture (if available) with the recipe name overlaying it at the bottom and a spoon icon for favoriting
+    """
+
+    api_url = f'https://api.spoonacular.com/recipes/random?number=21&apiKey={API_SECRET_KEY}'
+
+    try:
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            data = response.json()
+            recipes = data['recipes']
+
+            return render_template("/recipes/recipes.html", recipes=recipes)
+        else:
+            return render_template("/recipes/error.html", error="Failed to fetch recipes")
+    except Exception as e:
+        return render_template("/recipes/error.html", error=str(e))
+    
+@app.route('/recipes/<int:id>')
+def individual_recipe(id):
+    """
+    Display an individual recipe by its ID.
+    """
+    api_url = f'https://api.spoonacular.com/recipes/{id}/information?apiKey={API_SECRET_KEY}'
+
+    try:
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            recipe_data = response.json()
+            # Extract the relevant information from the API response
+            recipe = {
+                'id': recipe_data['id'],
+                'title': recipe_data['title'],
+                'image': recipe_data['image'],
+                'readyInMinutes': recipe_data['readyInMinutes'],
+                'servings': recipe_data['servings'],
+                'summary': recipe_data['summary'],
+                'instructions': recipe_data['instructions'].split('\n') if 'instructions' in recipe_data else [],
+            }
+
+            return render_template("/recipes/individual.html", recipe=recipe)
+        else:
+            return render_template("/recipes/error.html", error="Failed to fetch recipe")
+    except Exception as e:
+        return render_template("/recipes/error.html", error=str(e))
+    
+@app.route('/recipes/search', methods=['GET', 'POST'])
+def search_recipes():
+    """search recipes based off of diet, cuisine or ingredients"""
+
+    if request.method == 'POST':
+        # Retrieve search criteria from the form
+        diet = request.form.get('diet')
+        cuisine = request.form.get('cuisine')
+        ingredients = request.form.get('ingredients')
+
+        # Build the search query based on the criteria
+        # You can use these criteria to construct the 'diet', 'cuisine', and 'includeIngredients' parameters for the Spoonacular API request
+
+        # Make the API request with the constructed query
+        # Parse the response and display the search results in the template
+        # You can use the same 'recipes.html' template for displaying search results
+
+    return render_template('recipes/search.html')
