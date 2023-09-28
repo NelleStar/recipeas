@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, session, flash, g, request
+from flask import Flask, redirect, render_template, session, flash, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from secret import API_SECRET_KEY
@@ -6,8 +6,8 @@ import requests
 
 from werkzeug.security import check_password_hash
 
-from models import db, connect_db, User, Recipe, Favorite, Ingredient, RecipeIngredient, Comment
-from forms import CommentForm, UserAddForm, UserEditForm, LoginForm
+from models import db, connect_db, User, Recipe, Favorite, Ingredient, RecipeIngredient, PantryIngredients
+from forms import CommentForm, UserAddForm, UserEditForm, LoginForm, AddItemToPantry
 from secret import API_SECRET_KEY
 
 CURR_USER_KEY = "curr_user"
@@ -99,7 +99,7 @@ def signup():
             return render_template("users/signup.html", form=form)
         
         do_login(user)
-        return redirect("/recipes")
+        return redirect(f"/user/{user.id}")
     
     else:
         return render_template('users/signup.html', form=form)
@@ -147,20 +147,91 @@ def logout():
 
 
 ################################################################################
-#user profile and favorites route
-@app.route('/user/<int:user_id>')
+#user profile and edit route
+@app.route('/user/<int:user_id>', methods=['GET', 'POST'])
 def show_user(user_id):
-    """Show a specific user profile 
+    """Show a specific user profile.
     
     SHOW: Full name, email, date joined, pantry list
-    *each pantry list should have: a delete button next to the li and be a link to a recipes list that includes that ingredient
+    * Each pantry list item should have: a delete button next to the li and be a link to a /recipes/search.html where that ingredient is put into the ingredient search bar and random recipes are shown.
 
     LINK: Edit profile, delete profile
     """
     user = User.query.get_or_404(user_id)
+    form = AddItemToPantry()
 
-    return render_template('/users/profile.html', user=user)
+    pantry = PantryIngredients.query.filter_by(user_id=user.id).all()
 
+    if form.validate_on_submit():
+        ingredient_name = form.ingredient_name.data
+        
+        if ingredient_name:
+            pantry_item = PantryIngredients(user_id=user.id, ingredient_name=ingredient_name)
+            db.session.add(pantry_item)
+            db.session.commit()
+
+        return redirect(url_for('show_user', user_id=user_id))
+
+    return render_template('users/profile.html', user=user, form=form, pantry=pantry)
+
+@app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+def edit_user(user_id):
+    """Update profile for current user."""
+ 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/login")
+
+    user = User.query.get_or_404(user_id)
+    if g.user.id != user.id:
+        flash("You can only edit your own profile.", "danger")
+        return redirect(f"/users/{g.user.id}")
+
+    form = UserEditForm(obj=user)
+
+    if form.validate_on_submit():
+        # Check the password entered by the user
+        if User.authenticate(g.user.email, form.password.data):
+            # Password is correct, proceed with the update
+            
+            user.email = form.email.data
+            user.first_name = form.first_name.data
+            user.last_name = form.last_name.data
+
+            db.session.commit()
+            flash("Profile updated successfully!", "success")
+            return redirect(f'/user/{user.id}')
+        else:
+            flash("Password incorrect!", 'danger')
+            
+
+    return render_template('/users/edit.html', user=user, form=form)
+
+@app.route('/user/<int:user_id>/add_to_pantry', methods=['POST'])
+def add_to_pantry(user_id):
+    """add pantry items"""
+
+    user = User.query.get_or_404(user_id)
+    ingredient_name = request.form.get('ingredient_name')
+
+    if ingredient_name:
+        pantry_item = PantryIngredients(user_id=user.id, ingredient_name=ingredient_name)
+        db.session.add(pantry_item)
+        db.session.commit()
+
+    return redirect(url_for('show_user', user_id=user_id))
+
+
+@app.route('/user/<int:user_id>/delete_pantry_item/<int:item_id>', methods=['GET', 'POST'])
+def delete_pantry_item(user_id, item_id):
+    pantry_item = PantryIngredients.query.get_or_404(item_id)
+    
+    # Check if the pantry item belongs to the user
+    if pantry_item.user_id == user_id:
+        db.session.delete(pantry_item)
+        db.session.commit()
+
+    return redirect(url_for('show_user', user_id=user_id))
 
 ################################################################################
 #recipes list and individual page
@@ -176,16 +247,17 @@ def recipes():
     Each recipe should have a picture (if available) with the recipe name overlaying it at the bottom and a spoon icon for favoriting
     """
 
-    api_url = f'https://api.spoonacular.com/recipes/random?number=21&apiKey={API_SECRET_KEY}'
+    api_url = f'https://api.spoonacular.com/recipes/complexSearch?apiKey={API_SECRET_KEY}&number=21&sort=random'
 
     try:
         response = requests.get(api_url)
 
         if response.status_code == 200:
             data = response.json()
-            recipes = data['recipes']
+            recipes = data['results']
+            user = session.get('user') 
 
-            return render_template("/recipes/recipes.html", recipes=recipes)
+            return render_template("/recipes/recipes.html", recipes=recipes, user=user)
         else:
             return render_template("/recipes/error.html", error="Failed to fetch recipes")
     except Exception as e:
@@ -202,6 +274,7 @@ def individual_recipe(id):
         response = requests.get(api_url)
 
         if response.status_code == 200:
+            user = session.get('user') 
             recipe_data = response.json()
             # Extract the relevant information from the API response
             recipe = {
@@ -214,15 +287,25 @@ def individual_recipe(id):
                 'instructions': recipe_data['instructions'].split('\n') if 'instructions' in recipe_data else [],
             }
 
-            return render_template("/recipes/individual.html", recipe=recipe)
+            return render_template("/recipes/individual.html", recipe=recipe, user=user)
         else:
             return render_template("/recipes/error.html", error="Failed to fetch recipe")
     except Exception as e:
         return render_template("/recipes/error.html", error=str(e))
     
+import requests
+
 @app.route('/recipes/search', methods=['GET', 'POST'])
 def search_recipes():
-    """search recipes based off of diet, cuisine or ingredients"""
+    """Search recipes based on diet, cuisine, or ingredients."""
+    
+    cuisines = [
+        "African", "Asian", "American", "British", "Cajun", "Caribbean", "Chinese", "Eastern European", "European", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese", "Jewish", "Korean", "Latin American", "Mediterranean", "Mexican", "Middle Eastern", "Nordic", "Southern", "Spanish", "Thai", "Vietnamese"
+    ]
+
+    diets = [
+        'Gluten Free', 'Keto', 'Vegetarian', 'Lacto-Vegetarian', 'Ovo-Vegetarian', 'Vegan', 'Pescetarian', 'Paleo', 'Primal', 'Low FODMAP', 'Whole30'
+    ]
 
     if request.method == 'POST':
         # Retrieve search criteria from the form
@@ -230,11 +313,34 @@ def search_recipes():
         cuisine = request.form.get('cuisine')
         ingredients = request.form.get('ingredients')
 
-        # Build the search query based on the criteria
-        # You can use these criteria to construct the 'diet', 'cuisine', and 'includeIngredients' parameters for the Spoonacular API request
+        # Build the API request URL with the selected parameters
+        api_url = f'https://api.spoonacular.com/recipes/complexSearch?apiKey={API_SECRET_KEY}&number=21&sort=random'
 
-        # Make the API request with the constructed query
-        # Parse the response and display the search results in the template
-        # You can use the same 'recipes.html' template for displaying search results
+        if diet:
+            api_url += f'&diet={diet}'
+        if cuisine:
+            api_url += f'&cuisine={cuisine}'
+        if ingredients:
+            api_url += f'&includeIngredients={ingredients}'
 
-    return render_template('recipes/search.html')
+        print("API URL:", api_url)
+
+        try:
+            # Make an API request to the Spoonacular API
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                data = response.json()
+                recipes = data['results']
+            else:
+                recipes = []
+
+        except Exception as e:
+            print(str(e))
+            recipes = []
+
+        # Pass the list of recipes to the search template
+        return render_template('/recipes/search.html', cuisines=cuisines, diets=diets, recipes=recipes)
+
+    return render_template('/recipes/search.html', cuisines=cuisines, diets=diets)
+

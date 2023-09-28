@@ -28,3 +28,8 @@ class UserEditForm(FlaskForm):
     first_name = StringField("First Name", validators=[DataRequired()])
     last_name = StringField("Last Name", validators=[DataRequired()])
     password = PasswordField('Password', validators=[Length(min=6)])
+
+class AddItemToPantry(FlaskForm):
+    """basic form for user to submit new pantry items"""
+
+    ingredient_name = StringField('Ingredient Name', validators=[DataRequired()])

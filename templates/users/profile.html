@@ -1,14 +1,39 @@
 {% extends 'base.html' %}
 
-{% block title %}{{user.first_name}}'s Profile{% endblock %}
+{% block title %}{{ user.first_name }}'s Profile{% endblock %}
 
 {% block content %}
+<h1>Welcome Back, {{ user.first_name }}</h1>
+<a href="/user/{{ user.id }}/edit" class="btn btn-primary btn-lg btn-block">Edit User Info</a>
 
-name
-email
-Edit
+<div>
+    <div>
+        <h3>Favorited Recipes</h3>
+        {% for favorite in favorites %}
+            <a href="/recipes/{{ recipe.id }}">{{ recipe.title | safe }}</a>
+        {% endfor %}
+    </div>
 
-Favorites
+    <div>
+        <h3>Pantry</h3>
+        <form id="addIngredientForm" method="POST" action="{{ url_for('add_to_pantry', user_id=user.id) }}">
+            {{ form.hidden_tag() }}
+            <input type="text" name="ingredient_name" id="ingredientInput" placeholder="Add Ingredient">
+            <button type="submit" id="addIngredientButton">Add</button>
+        </form>
+            <ul>
+                {% for item in pantry %}
+                    <li>
+                        <a href="{{ url_for('search_recipes') }}?ingredients={{ item.ingredient_name }}">
+                            {{ item.ingredient_name }}
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_pantry_item', user_id=user.id, item_id=item.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-link btn-sm" style="color: red;"><i class="fas fa-times"></i></button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+    </div>
+</div>
 
-Pantry
 {% endblock %}

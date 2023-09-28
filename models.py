@@ -319,9 +319,8 @@ class PantryIngredients(db.Model):
         nullable=False,
     )
 
-    ingredient_id = db.Column(
-        db.Integer,
-        db.ForeignKey('ingredients.id', ondelete='CASCADE'),
+    ingredient_name = db.Column(
+        db.String,
         nullable=False,
     )
 
@@ -331,8 +330,4 @@ class PantryIngredients(db.Model):
         backref='pantry_ingredients', 
         lazy=True
     )
-    ingredient = db.relationship(
-        'Ingredient', 
-        backref='pantry_ingredients', 
-        lazy=True
-    )
+

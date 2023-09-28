@@ -6,20 +6,44 @@
 <h1>Search Recipes</h1>
 
 <form method="POST">
-    <label for="diet">Diet:</label>
+    <label for="dietSelect">Diet:</label>
     <select name="diet" id="dietSelect">
         <option value="">All</option>
+        {% for diet in diets %}
+            <option value="{{ diet }}">{{ diet }}</option>
+        {% endfor %}
     </select><br>
 
-    <label for="cuisine">Cuisine:</label>
+    <label for="cuisineSelect">Cuisine:</label>
     <select name="cuisine" id="cuisineSelect">
         <option value="">All</option>
+        {% for cuisine in cuisines %}
+            <option value="{{ cuisine }}">{{ cuisine }}</option>
+        {% endfor %}
     </select><br>
 
+    <h2>Or Search By Specific Ingredient from your Pantry</h2>
+        <!-- make it so the user pantry item goes into this box automatically -->
     <label for="ingredients">Ingredients:</label>
     <input type="text" id="ingredients" name="ingredients"><br>
 
     <input type="submit" value="Search">
 </form>
+
+<div class="row">
+    {% for recipe in recipes %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <a href="/recipes/{{ recipe.id }}">
+                    <img src="{{ recipe.image }}" class="card-img-top" alt="{{ recipe.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ recipe.title | safe }}</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
 
 {% endblock %}
