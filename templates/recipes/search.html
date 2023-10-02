@@ -25,7 +25,7 @@
     <h2>Or Search By Specific Ingredient from your Pantry</h2>
         <!-- make it so the user pantry item goes into this box automatically -->
     <label for="ingredients">Ingredients:</label>
-    <input type="text" id="ingredients" name="ingredients"><br>
+    <input type="text" id="ingredients" name="ingredients" value="{{ ingredient_name }}"><br>
 
     <input type="submit" value="Search">
 </form>
@@ -45,5 +45,6 @@
     {% endfor %}
 </div>
 
+<script src="/static/script.js"></script>
 
 {% endblock %}

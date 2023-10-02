@@ -10,7 +10,8 @@
     <h2>{{ recipe.title }}</h2>
 
     <h3>Like this recipe? Add it to your favorites!</h3>
-    <button id="favorite-button" onclick="toggleFavorite({{ user.id }}, {{ recipe.id }})">
+    <button id="favorite-button" onclick="toggleFavorite(
+        {{ session['user_id'] }}, {{ recipe.id }})">
     <i id="star-icon" class="far fa-star"></i>
     </button>
 
@@ -25,4 +26,6 @@
         {% endfor %}
     </ol>
 </div>
+
+<script src="/static/script.js"></script>
 {% endblock %}

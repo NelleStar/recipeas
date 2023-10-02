@@ -4,7 +4,14 @@
 
 {% block content %}
 <h1>Welcome Back, {{ user.first_name }}</h1>
-<a href="/user/{{ user.id }}/edit" class="btn btn-primary btn-lg btn-block">Edit User Info</a>
+
+<div>
+    <a href="/user/{{ user.id }}/edit" class="btn btn-primary btn-lg btn-block">Edit User Info</a>
+
+    <form method="POST" action="/users/delete" class="form-inline">
+        <button class="btn btn-outline-danger ml-2">Delete Profile</button>
+    </form>
+</div>
 
 <div>
     <div>

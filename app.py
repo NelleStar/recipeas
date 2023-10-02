@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, session, flash, g, request, url_for
+from flask import Flask, redirect, render_template, session, flash, jsonify, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from secret import API_SECRET_KEY
@@ -6,7 +6,7 @@ import requests
 
 from werkzeug.security import check_password_hash
 
-from models import db, connect_db, User, Recipe, Favorite, Ingredient, RecipeIngredient, PantryIngredients
+from models import db, connect_db, User, Favorite, PantryIngredients
 from forms import CommentForm, UserAddForm, UserEditForm, LoginForm, AddItemToPantry
 from secret import API_SECRET_KEY
 
@@ -121,7 +121,7 @@ def login():
                 print(f"User object: {user}")
 
                 do_login(user)
-                flash(f"Hello, {user.first_name}", "success")
+                print(session[CURR_USER_KEY])
                 return redirect(f"/user/{user.id}")
 
             flash('Invalid; try again!', 'danger')
@@ -152,13 +152,15 @@ def logout():
 def show_user(user_id):
     """Show a specific user profile.
     
-    SHOW: Full name, email, date joined, pantry list
+    SHOW:  name, email, pantry list
     * Each pantry list item should have: a delete button next to the li and be a link to a /recipes/search.html where that ingredient is put into the ingredient search bar and random recipes are shown.
 
     LINK: Edit profile, delete profile
     """
     user = User.query.get_or_404(user_id)
     form = AddItemToPantry()
+
+    print(f'User.id = {user}')
 
     pantry = PantryIngredients.query.filter_by(user_id=user.id).all()
 
@@ -206,6 +208,24 @@ def edit_user(user_id):
             
 
     return render_template('/users/edit.html', user=user, form=form)
+
+@app.route('/users/delete', methods=["POST"])
+def delete_user():
+    """Delete user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    do_logout()
+
+    db.session.delete(g.user)
+    db.session.commit()
+
+    return redirect("/signup")
+
+########################################################################
+# add to pantry
 
 @app.route('/user/<int:user_id>/add_to_pantry', methods=['POST'])
 def add_to_pantry(user_id):
@@ -256,6 +276,7 @@ def recipes():
             data = response.json()
             recipes = data['results']
             user = session.get('user') 
+            print(f"User ID in session in group_recipe route: {user}")
 
             return render_template("/recipes/recipes.html", recipes=recipes, user=user)
         else:
@@ -270,11 +291,21 @@ def individual_recipe(id):
     """
     api_url = f'https://api.spoonacular.com/recipes/{id}/information?apiKey={API_SECRET_KEY}'
 
+    if 'curr_user' not in session:
+        flash('Please log in to access this page', 'danger')
+        return redirect('/login')  # Redirect to the login page
+
     try:
         response = requests.get(api_url)
 
         if response.status_code == 200:
-            user = session.get('user') 
+            user_id = session.get('user_id')
+            print(f'user_id = {user_id}')
+
+            session_user_id = session.get('user_id')
+            print(f'session_user_id = {session_user_id}')
+           
+
             recipe_data = response.json()
             # Extract the relevant information from the API response
             recipe = {
@@ -287,13 +318,39 @@ def individual_recipe(id):
                 'instructions': recipe_data['instructions'].split('\n') if 'instructions' in recipe_data else [],
             }
 
-            return render_template("/recipes/individual.html", recipe=recipe, user=user)
+            return render_template("/recipes/individual.html", recipe=recipe, user_id=user_id)
         else:
             return render_template("/recipes/error.html", error="Failed to fetch recipe")
     except Exception as e:
         return render_template("/recipes/error.html", error=str(e))
     
-import requests
+@app.route('/add_to_favorites', methods=['POST'])
+def add_to_favorites():
+    user_id = session.get('user_id')
+    print(user_id)
+    
+    if user_id is None:
+        # User is not logged in, handle it as you prefer (e.g., redirect to login)
+        flash("Please Login.", "danger")
+        return redirect("/login")
+
+    recipe_id = request.json.get('recipe_id')
+    
+    # Insert the data into your database table (assuming you have a database connection)
+    try:
+        # Perform the database insertion here
+        # You may want to check if the user already has this recipe in favorites
+        # If not, insert the record; otherwise, handle it as you prefer
+        
+        # Example code (requires SQLAlchemy or equivalent):
+        favorite = Favorite(user_id=user_id, recipe_id=recipe_id)
+        db.session.add(favorite)
+        db.session.commit()
+        
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
 
 @app.route('/recipes/search', methods=['GET', 'POST'])
 def search_recipes():
@@ -306,6 +363,8 @@ def search_recipes():
     diets = [
         'Gluten Free', 'Keto', 'Vegetarian', 'Lacto-Vegetarian', 'Ovo-Vegetarian', 'Vegan', 'Pescetarian', 'Paleo', 'Primal', 'Low FODMAP', 'Whole30'
     ]
+
+    ingredient_name = request.args.get('ingredients')
 
     if request.method == 'POST':
         # Retrieve search criteria from the form
@@ -340,7 +399,27 @@ def search_recipes():
             recipes = []
 
         # Pass the list of recipes to the search template
-        return render_template('/recipes/search.html', cuisines=cuisines, diets=diets, recipes=recipes)
+        return render_template('/recipes/search.html', cuisines=cuisines, diets=diets, recipes=recipes, ingredient_name=ingredient_name)
 
-    return render_template('/recipes/search.html', cuisines=cuisines, diets=diets)
+    return render_template('/recipes/search.html', cuisines=cuisines, diets=diets, ingredient_name=ingredient_name)
 
+@app.route('/recipes/search/<string:query>', methods=['GET'])
+def search_recipes_query(query):
+    api_url = f' https://api.spoonacular.com/food/ingredients/search?apiKey={API_SECRET_KEY}&query={query}'
+
+    print("API URL:", api_url)
+
+    try:
+        # Make an API request to the Spoonacular API
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            data = response.json()
+            ingredients = data['results']
+        else:
+            ingredients = []
+
+    except Exception as e:
+        print(str(e))
+        ingredients = []
+    return jsonify({'result': {'search_results': ingredients}})

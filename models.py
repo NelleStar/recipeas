@@ -1,5 +1,3 @@
-"""SQLAlchemy models for recipeas"""
-
 from datetime import datetime
 
 from flask_bcrypt import Bcrypt
@@ -47,18 +45,17 @@ class User(db.Model):
         nullable=False,
     )
 
-    # a user can have multiple recipes (12m)
-    user_recipes = db.relationship(
-        'Recipe', 
-        backref='author', 
-        lazy=True,
+    favorite_recipes = db.relationship(
+        'Favorite',
+        back_populates='user',
+        lazy=True
     )
 
-    favorite_recipes = db.relationship(
-        'Recipe',
-        secondary='favorites',
-        back_populates='favorited_by',
-        lazy=True
+    user_pantry = db.relationship(
+        'PantryIngredients', 
+        back_populates='user', 
+        lazy=True,
+        cascade='all, delete-orphan'
     )
 
     @classmethod
@@ -97,59 +94,6 @@ class User(db.Model):
         return False
 
 
-class Recipe(db.Model):
-    """instance of a recipe"""
-
-    __tablename__ = 'recipes'
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-        autoincrement=True,
-    )
-
-    name = db.Column(
-        db.Text,
-        nullable=False,
-    )
-
-    description = db.Column(
-        db.Text
-    )
-    
-    instructions = db.Column(
-        db.Text
-    )
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False
-    )
-
-    # a recipe can have multiple ingredients (m2m via RecipeIngredient)
-    recipe_ingredients = db.relationship(
-        'RecipeIngredient', 
-        backref='recipe',  
-        lazy=True
-    )
-    
-    # a recipe can have multiple comments (12m)
-    comments = db.relationship(
-        'Comment', 
-        backref='recipe_comment', 
-        lazy='dynamic'
-    )
-    
-    # a recipe can be marked as a favorite by multiple users (m2m via Favorites)
-    favorited_by = db.relationship(
-        'User', 
-        secondary='favorites', 
-        back_populates='favorite_recipes',
-        lazy=True,
-    )
-
-
 class Favorite(db.Model):
     """Mapping users favorite recipes."""
 
@@ -176,128 +120,6 @@ class Favorite(db.Model):
     user = db.relationship(
         'User', 
         backref='favorites', 
-        lazy=True
-    )
-    recipe = db.relationship(
-        'Recipe', 
-        backref='favorites', 
-        lazy=True
-    )
-
-
-class Ingredient(db.Model):
-    """instance of a single ingredient"""
-
-    __tablename__ = 'ingredients'
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-        autoincrement=True,
-    )
-
-    name = db.Column(
-        db.Text,
-        nullable=False,
-    )
-
-    # m2m via RecipeIngredient
-    recipes = db.relationship(
-        'RecipeIngredient', 
-        backref='ingredient_association', 
-        lazy=True,
-    )
-    # relationship for User to access the pantry
-    User.pantry = db.relationship(
-        'PantryIngredients', 
-        back_populates='user', 
-        lazy=True,
-    )
-
-
-class RecipeIngredient(db.Model):
-    """mapping ingredients to recipes"""
-
-    __tablename__ = "recipe_ingredients"
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-        autoincrement=True,
-    )
-
-    recipe_id = db.Column(
-        db.Integer,
-        db.ForeignKey('recipes.id', ondelete='cascade'),
-        nullable=False,
-    )
-
-    ingredient_id = db.Column(
-        db.Integer,
-        db.ForeignKey('ingredients.id', ondelete='cascade'),
-        nullable=False,
-    )
-
-    quantity = db.Column(
-        db.String(50), 
-        nullable=False,
-    )
-
-    # m2m relationship linking recipe and ingredients
-    recipe_relationship = db.relationship(
-        'Recipe', 
-        backref='ingredients_relationship'
-    )
-    ingredient = db.relationship(
-        'Ingredient', 
-        backref='recipe_ingredients'
-    )
-
-class Comment(db.Model):
-    """An individual comment."""
-
-    __tablename__ = 'comments'
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-        autoincrement=True,
-    )
-
-    text = db.Column(
-        db.String(140),
-        nullable=False,
-    )
-
-    timestamp = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow(),
-    )
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-
-    recipe_id = db.Column(
-        db.Integer, 
-        db.ForeignKey('recipes.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-
-
-    # a comment belongs to a specific user (12m)
-    user = db.relationship(
-        'User', 
-        backref='user_comments', 
-        lazy=True
-    )
-    # a comment is associated with a specific recipe (12m)
-    recipe = db.relationship(
-        'Recipe', 
-        backref='recipe_comments', 
         lazy=True
     )
 

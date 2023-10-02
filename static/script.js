@@ -33,3 +33,47 @@
 //     }
 //   });
 // });
+// ==============================================================================
+// // Your frontend API endpoint
+// const elem = document.getElementById("ingredients");
+// elem.addEventListener("keydown", queryResults);
+// console.log("howdy 2")
+// const frontendEndpoint = "/recipes/search/";
+// function queryResults () {
+//   // Make a request to your backend, which will include the secret token
+//   console.log("howdy")
+//   axios
+//   .get(frontendEndpoint + this.value)
+//   .then((response) => {
+//     // Handle the response from your backend
+//     console.log(response.data);
+//   })
+//   .catch((error) => {
+//     // Handle any errors
+//     console.error(error);
+//   });
+// }
+
+// ============================================================================
+
+    function toggleFavorite(user_id, recipeId) {
+        axios.post('/add_to_favorites', {
+            user_id: user_id,
+            recipe_id: recipeId
+        })
+        .then(function (response) {
+            if (response.data.success) {
+                // Update the UI to show that the recipe is liked (e.g., change star icon color)
+                document.getElementById('star-icon').classList.add('fas', 'fa-star');
+            } else {
+                // Handle any error messages or logic here
+            }
+        })
+        .catch(function (error) {
+            console.error(error);
+        });
+    }
+
+
+
+
