@@ -1,0 +1,21 @@
+* {
+    color: #465775;
+    font-family: "Roboto", sans-serif;
+}
+
+/* Custom Colors */
+.yinmn-blue {
+    color: #465775;
+}
+
+.custom-bg-color {
+    background-color: #EF6F6C;
+}
+
+/* Custom button color */
+.btn-custom {
+    background-color: #59C9A5 !important;
+    border-color: #465775 !important;
+    color: #465775 !important;
+    font-weight: 600 !important;
+}

@@ -14,7 +14,7 @@ CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipeas'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///test_recipes'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 
@@ -163,6 +163,7 @@ def show_user(user_id):
     print(f'User.id = {user}')
 
     pantry = PantryIngredients.query.filter_by(user_id=user.id).all()
+    favorites = Favorite.query.filter_by(user_id=user.id).all()
 
     if form.validate_on_submit():
         ingredient_name = form.ingredient_name.data
@@ -174,7 +175,7 @@ def show_user(user_id):
 
         return redirect(url_for('show_user', user_id=user_id))
 
-    return render_template('users/profile.html', user=user, form=form, pantry=pantry)
+    return render_template('users/profile.html', user=user, form=form, pantry=pantry, favorites=favorites)
 
 @app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
 def edit_user(user_id):
@@ -299,15 +300,26 @@ def individual_recipe(id):
         response = requests.get(api_url)
 
         if response.status_code == 200:
-            user_id = session.get('user_id')
+            user_id = session.get('curr_user')
             print(f'user_id = {user_id}')
 
-            session_user_id = session.get('user_id')
+            session_user_id = session.get('curr_user')
             print(f'session_user_id = {session_user_id}')
            
 
             recipe_data = response.json()
             # Extract the relevant information from the API response
+
+            ingredients = []
+            for ingredient in recipe_data['extendedIngredients']:
+                ingredient_info = {
+                    'name': ingredient['nameClean'],
+                    'amount': ingredient['amount'],
+                    'unit': ingredient['unit']
+                }
+                ingredients.append(ingredient_info)
+
+            print(recipe_data)
             recipe = {
                 'id': recipe_data['id'],
                 'title': recipe_data['title'],
@@ -315,6 +327,7 @@ def individual_recipe(id):
                 'readyInMinutes': recipe_data['readyInMinutes'],
                 'servings': recipe_data['servings'],
                 'summary': recipe_data['summary'],
+                'ingredients': ingredients,
                 'instructions': recipe_data['instructions'].split('\n') if 'instructions' in recipe_data else [],
             }
 
@@ -324,32 +337,58 @@ def individual_recipe(id):
     except Exception as e:
         return render_template("/recipes/error.html", error=str(e))
     
+def fetch_recipe_data_by_id(recipe_id):
+    api_url = f'https://api.spoonacular.com/recipes/{recipe_id}/information?apiKey={API_SECRET_KEY}'
+
+    print(api_url)
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        recipe_data = response.json()
+        return recipe_data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching recipe data: {e}")
+        return None
+    
 @app.route('/add_to_favorites', methods=['POST'])
 def add_to_favorites():
-    user_id = session.get('user_id')
-    print(user_id)
-    
+    user_id = session.get('curr_user')
+
     if user_id is None:
-        # User is not logged in, handle it as you prefer (e.g., redirect to login)
-        flash("Please Login.", "danger")
-        return redirect("/login")
+        flash("Please Log In.", "danger")
+        return jsonify(success=False, error="User not logged in")
 
     recipe_id = request.json.get('recipe_id')
     
-    # Insert the data into your database table (assuming you have a database connection)
+    # Assuming you fetch the recipe name along with the recipe details from the API
+    recipe_data = fetch_recipe_data_by_id(recipe_id)
+    
+    if not recipe_data:
+        return jsonify(success=False, error="Recipe not found")
+
+    recipe_name = recipe_data.get('title')
+
+    # Check if the user has already liked the recipe
+    existing_favorite = Favorite.query.filter_by(user_id=user_id, recipe_id=recipe_id).first()
+
     try:
-        # Perform the database insertion here
-        # You may want to check if the user already has this recipe in favorites
-        # If not, insert the record; otherwise, handle it as you prefer
-        
-        # Example code (requires SQLAlchemy or equivalent):
-        favorite = Favorite(user_id=user_id, recipe_id=recipe_id)
-        db.session.add(favorite)
-        db.session.commit()
-        
-        return jsonify(success=True)
+        if existing_favorite:
+            # unliking a recipe
+            db.session.delete(existing_favorite)
+            db.session.commit()
+            return jsonify(success=True, message="Recipe removed from favorites.")
+        else:
+            # liking a recipe
+            favorite = Favorite(user_id=user_id, recipe_id=recipe_id, recipe_name=recipe_name)
+            db.session.add(favorite)
+            db.session.commit()
+            return jsonify(success=True, message="Recipe added to favorites.")
     except Exception as e:
         return jsonify(success=False, error=str(e))
+
+
+
 
 
 @app.route('/recipes/search', methods=['GET', 'POST'])

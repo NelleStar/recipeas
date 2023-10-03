@@ -18,24 +18,24 @@
     <title>{% block title %}{% endblock %}</title>
 
 </head>
-<body>
-    <div class="navbar navbar-default navbar-static-top">
+<body class="custom-bg-color">
+    <div class="navbar navbar-default navbar-static-top custom-bg-color">
         <div class="container">
             <div class="navbar-header">
-                <a href="/recipes">Recipeas</a>
-                <a href="/recipes/search">Search</a>
+                <a href="/recipes" class="yinmn-blue">Recipeas</a>
+                <a href="/recipes/search" class="yinmn-blue">Search</a>
             </div>
         </div>    
         <div >
             <ul class="nav navbar-nav navbar-right">
                 {% if 'curr_user' not in session %}
-                    <a href="/login">Login</a>
-                    <a href="/signup">Signup</a>
+                    <a href="/login" class="yinmn-blue">Login</a>
+                    <a href="/signup" class="yinmn-blue">Signup</a>
                 {% endif %}
 
                 {% if 'curr_user' in session %}
-                    <a href="/user/{{ session['curr_user'] }}">Profile</a>
-                    <a href="/logout">Logout</a>
+                    <a href="/user/{{ session['curr_user'] }}" class="yinmn-blue">Profile</a>
+                    <a href="/logout" class="yinmn-blue">Logout</a>
                 {% endif %}
             </ul>
         </div>

@@ -55,24 +55,39 @@
 // }
 
 // ============================================================================
+function toggleFavorite(user_id, recipeId) {
+  console.log("toggleFavorite() called");
 
-    function toggleFavorite(user_id, recipeId) {
-        axios.post('/add_to_favorites', {
-            user_id: user_id,
-            recipe_id: recipeId
-        })
-        .then(function (response) {
-            if (response.data.success) {
-                // Update the UI to show that the recipe is liked (e.g., change star icon color)
-                document.getElementById('star-icon').classList.add('fas', 'fa-star');
-            } else {
-                // Handle any error messages or logic here
-            }
-        })
-        .catch(function (error) {
-            console.error(error);
-        });
-    }
+  const requestData = `{"user_id": ${user_id}, "recipe_id": ${recipeId}}`;
+
+  axios
+    .post("/add_to_favorites", requestData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+    .then(function (response) {
+      if (response.data.success) {
+        // Toggle the star icon
+        const starIcon = document.getElementById("star-icon");
+        if (starIcon.classList.contains("fas")) {
+          starIcon.classList.remove("fas", "fa-star");
+          starIcon.classList.add("far", "fa-star");
+        } else {
+          starIcon.classList.remove("far", "fa-star");
+          starIcon.classList.add("fas", "fa-star");
+        }
+      } else {
+        // Handle any error messages or logic here
+      }
+    })
+    .catch(function (error) {
+      console.error(error);
+    });
+}
+
+
+
 
 
 

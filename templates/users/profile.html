@@ -6,7 +6,7 @@
 <h1>Welcome Back, {{ user.first_name }}</h1>
 
 <div>
-    <a href="/user/{{ user.id }}/edit" class="btn btn-primary btn-lg btn-block">Edit User Info</a>
+    <a href="/user/{{ user.id }}/edit" class="btn btn-custom">Edit User Info</a>
 
     <form method="POST" action="/users/delete" class="form-inline">
         <button class="btn btn-outline-danger ml-2">Delete Profile</button>
@@ -16,10 +16,18 @@
 <div>
     <div>
         <h3>Favorited Recipes</h3>
-        {% for favorite in favorites %}
-            <a href="/recipes/{{ recipe.id }}">{{ recipe.title | safe }}</a>
-        {% endfor %}
+        <ul>
+            {% for favorite in favorites %}
+                <li>
+                    <a href="{{ url_for('individual_recipe', id=favorite.recipe_id) }}" class="yinmn-blue">
+                        {{ favorite.recipe_name }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
+
+
 
     <div>
         <h3>Pantry</h3>
@@ -31,7 +39,7 @@
             <ul>
                 {% for item in pantry %}
                     <li>
-                        <a href="{{ url_for('search_recipes') }}?ingredients={{ item.ingredient_name }}">
+                        <a href="{{ url_for('search_recipes') }}?ingredients={{ item.ingredient_name }}" class="yinmn-blue">
                             {{ item.ingredient_name }}
                         </a>
                         <form method="POST" action="{{ url_for('delete_pantry_item', user_id=user.id, item_id=item.id) }}" style="display: inline;">

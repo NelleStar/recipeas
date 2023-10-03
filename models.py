@@ -112,8 +112,10 @@ class Favorite(db.Model):
 
     recipe_id = db.Column(
         db.Integer,
-        db.ForeignKey('recipes.id', ondelete='cascade'),
-        unique=True
+    )
+
+    recipe_name = db.Column(
+        db.String(255)
     )
 
     # m2m between users and favorite recipes
@@ -123,6 +125,9 @@ class Favorite(db.Model):
         lazy=True
     )
 
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'recipe_id', name='uq_user_recipe'),
+    )
 
 class PantryIngredients(db.Model):
     """Pantry ingredients for each user."""
