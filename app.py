@@ -370,8 +370,9 @@ def add_to_favorites():
 
     recipe_id = request.json.get('recipe_id')
 
+    # Assuming you fetch the recipe name along with the recipe details from the API
     recipe_data = fetch_recipe_data_by_id(recipe_id)
-    
+
     if not recipe_data:
         return jsonify(success=False, error="Recipe not found")
 
@@ -382,18 +383,19 @@ def add_to_favorites():
 
     try:
         if existing_favorite:
-            # unliking a recipe
+            # Unliking a recipe
             db.session.delete(existing_favorite)
             db.session.commit()
-            return jsonify(success=True, message="Recipe removed from favorites.")
+            return jsonify(success=True, message="Recipe removed from favorites.", is_favorite=False)
         else:
-            # liking a recipe
+            # Liking a recipe
             favorite = Favorite(user_id=user_id, recipe_id=recipe_id, recipe_name=recipe_name)
             db.session.add(favorite)
             db.session.commit()
-            return jsonify(success=True, message="Recipe added to favorites.")
+            return jsonify(success=True, message="Recipe added to favorites.", is_favorite=True)
     except Exception as e:
-        return jsonify(success=False, error=str(e))
+        return jsonify(success=False, error=str(e), is_favorite=False)
+
 
 
 

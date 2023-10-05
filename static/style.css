@@ -7,14 +7,26 @@ body {
     background: #fff;
 }
 
+a {
+    text-decoration: none !important;
+    font-weight: bold;
+    font-size: 1.1rem; 
+}
+
+.profile-col {
+    border: 2px solid #465775;
+    padding: 15px;
+    margin: 10px;
+    background-color: #465775;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 24px;
+}
+
 /* Custom Colors */
 .yinmn-blue {
     color: #465775;
 }
-
-/* .custom-bg-color {
-    background-color: #EF6F6C;
-} */
 
 /* Custom button color */
 .btn-custom {

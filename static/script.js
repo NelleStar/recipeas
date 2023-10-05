@@ -70,12 +70,12 @@ function toggleFavorite(user_id, recipeId) {
       if (response.data.success) {
         // Toggle the star icon
         const starIcon = document.getElementById("star-icon");
-        if (starIcon.classList.contains("fas")) {
-          starIcon.classList.remove("fas", "fa-star");
-          starIcon.classList.add("far", "fa-star");
-        } else {
+        if (response.data.is_favorite) {
           starIcon.classList.remove("far", "fa-star");
           starIcon.classList.add("fas", "fa-star");
+        } else {
+          starIcon.classList.remove("fas", "fa-star");
+          starIcon.classList.add("far", "fa-star");
         }
       } else {
         // Handle any error messages or logic here
@@ -85,6 +85,7 @@ function toggleFavorite(user_id, recipeId) {
       console.error(error);
     });
 }
+
 
 
 

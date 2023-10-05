@@ -22,10 +22,16 @@
     <div class="navbar navbar-default navbar-static-top custom-bg-color">
         <div>
             <ul class="nav navbar-nav navbar-left">
-                <li><a href="/recipes" class="yinmn-blue">Recipeas</a></li>
                 <li><a href="/recipes/search" class="yinmn-blue">Search</a></li>
             </ul>
-        </div>    
+        </div>  
+        
+        <div>
+            <h1 class="navbar-header text-center">
+                <a href="/recipes" class="yinmn-blue">reciPEAS</a>
+            </h1>
+        </div>
+
         <div >
             <ul class="nav navbar-nav navbar-right">
                 {% if 'curr_user' not in session %}

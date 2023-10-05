@@ -10,7 +10,7 @@
 <div class="container">
     <div class="row">
         <div class="col-md-6 text-center">
-            <h3>Favorited Recipes</h3>
+            <h3 class="profile-col">Favorited Recipes</h3>
             <ul>
                 {% for favorite in favorites %}
                     <li>
@@ -23,7 +23,7 @@
         </div>
 
         <div class="col-md-6 text-center">
-            <h3>Pantry</h3>
+            <h3 class="profile-col">Pantry</h3>
             <form id="addIngredientForm" method="POST" action="{{ url_for('add_to_pantry', user_id=user.id) }}">
                 {{ form.hidden_tag() }}
                 <input type="text" name="ingredient_name" id="ingredientInput" placeholder="Add Ingredient">
