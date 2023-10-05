@@ -3,14 +3,18 @@
     font-family: "Roboto", sans-serif;
 }
 
+body {
+    background: #fff;
+}
+
 /* Custom Colors */
 .yinmn-blue {
     color: #465775;
 }
 
-.custom-bg-color {
+/* .custom-bg-color {
     background-color: #EF6F6C;
-}
+} */
 
 /* Custom button color */
 .btn-custom {
@@ -18,4 +22,31 @@
     border-color: #465775 !important;
     color: #465775 !important;
     font-weight: 600 !important;
+}
+
+.navbar {
+    background-image: url("https://cdn.pixabay.com/photo/2019/04/02/04/32/masala-4096891_1280.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 25vh; /
+    background-color: rgba(0, 0, 0, 0.7); 
+    display: flex;
+    justify-content: space-between;
+}
+
+.navbar a {
+    font-size: 150%;
+    text-decoration: none; 
+    font-weight: bold; 
+    align-items: flex-end;
+}
+
+.navbar .navbar-header {
+    margin-bottom: 0;
+}
+
+
+ul {
+    list-style: none;
 }

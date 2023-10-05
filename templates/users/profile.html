@@ -3,39 +3,32 @@
 {% block title %}{{ user.first_name }}'s Profile{% endblock %}
 
 {% block content %}
-<h1>Welcome Back, {{ user.first_name }}</h1>
-
-<div>
-    <a href="/user/{{ user.id }}/edit" class="btn btn-custom">Edit User Info</a>
-
-    <form method="POST" action="/users/delete" class="form-inline">
-        <button class="btn btn-outline-danger ml-2">Delete Profile</button>
-    </form>
+<div class="container text-center">
+    <h1>Welcome Back, {{ user.first_name }}</h1>
 </div>
 
-<div>
-    <div>
-        <h3>Favorited Recipes</h3>
-        <ul>
-            {% for favorite in favorites %}
-                <li>
-                    <a href="{{ url_for('individual_recipe', id=favorite.recipe_id) }}" class="yinmn-blue">
-                        {{ favorite.recipe_name }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 text-center">
+            <h3>Favorited Recipes</h3>
+            <ul>
+                {% for favorite in favorites %}
+                    <li>
+                        <a href="{{ url_for('individual_recipe', id=favorite.recipe_id) }}" class="yinmn-blue">
+                            {{ favorite.recipe_name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-
-
-    <div>
-        <h3>Pantry</h3>
-        <form id="addIngredientForm" method="POST" action="{{ url_for('add_to_pantry', user_id=user.id) }}">
-            {{ form.hidden_tag() }}
-            <input type="text" name="ingredient_name" id="ingredientInput" placeholder="Add Ingredient">
-            <button type="submit" id="addIngredientButton">Add</button>
-        </form>
+        <div class="col-md-6 text-center">
+            <h3>Pantry</h3>
+            <form id="addIngredientForm" method="POST" action="{{ url_for('add_to_pantry', user_id=user.id) }}">
+                {{ form.hidden_tag() }}
+                <input type="text" name="ingredient_name" id="ingredientInput" placeholder="Add Ingredient">
+                <button type="submit" id="addIngredientButton">Add</button>
+            </form>
             <ul>
                 {% for item in pantry %}
                     <li>
@@ -48,7 +41,15 @@
                     </li>
                 {% endfor %}
             </ul>
+        </div>
     </div>
+</div>
+
+<div class="container text-center mt-4">
+    <a href="/user/{{ user.id }}/edit" class="btn btn-custom btn-sm">Edit User Info</a>
+    <form method="POST" action="/users/delete" class="form-inline">
+        <button class="btn btn-outline-danger btn-sm">Delete Profile</button>
+    </form>
 </div>
 
 {% endblock %}

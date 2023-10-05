@@ -14,7 +14,7 @@ CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///test_recipes'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipes'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 
@@ -285,6 +285,14 @@ def recipes():
     except Exception as e:
         return render_template("/recipes/error.html", error=str(e))
     
+def is_recipe_in_favorites(user_id, recipe_id):
+    """# Query your database to check if there's a record in the favorites table where user_id matches the current user and recipe_id matches the recipe.
+    """
+    favorite = Favorite.query.filter_by(user_id=user_id, recipe_id=recipe_id).first()
+    
+    return favorite is not None
+
+    
 @app.route('/recipes/<int:id>')
 def individual_recipe(id):
     """
@@ -308,7 +316,6 @@ def individual_recipe(id):
            
 
             recipe_data = response.json()
-            # Extract the relevant information from the API response
 
             ingredients = []
             for ingredient in recipe_data['extendedIngredients']:
@@ -331,7 +338,9 @@ def individual_recipe(id):
                 'instructions': recipe_data['instructions'].split('\n') if 'instructions' in recipe_data else [],
             }
 
-            return render_template("/recipes/individual.html", recipe=recipe, user_id=user_id)
+            is_favorite = is_recipe_in_favorites(user_id, recipe['id'])
+
+            return render_template("/recipes/individual.html", recipe=recipe, user_id=user_id, is_favorite=is_favorite)
         else:
             return render_template("/recipes/error.html", error="Failed to fetch recipe")
     except Exception as e:
@@ -360,8 +369,7 @@ def add_to_favorites():
         return jsonify(success=False, error="User not logged in")
 
     recipe_id = request.json.get('recipe_id')
-    
-    # Assuming you fetch the recipe name along with the recipe details from the API
+
     recipe_data = fetch_recipe_data_by_id(recipe_id)
     
     if not recipe_data:

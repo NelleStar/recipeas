@@ -3,46 +3,60 @@
 {% block title %}Search Recipes{% endblock %}
 
 {% block content %}
-<h1>Search Recipes</h1>
+<div class="container text-center">
+    <h1>Search Recipes</h1>
+</div>
 
-<form method="POST">
-    <label for="dietSelect">Diet:</label>
-    <select name="diet" id="dietSelect">
-        <option value="">All</option>
-        {% for diet in diets %}
-            <option value="{{ diet }}">{{ diet }}</option>
-        {% endfor %}
-    </select><br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form method="POST">
+                <label for="dietSelect">Diet:</label>
+                <select name="diet" id="dietSelect" class="form-control">
+                    <option value="">All</option>
+                    {% for diet in diets %}
+                        <option value="{{ diet }}">{{ diet }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <label for="cuisineSelect">Cuisine:</label>
-    <select name="cuisine" id="cuisineSelect">
-        <option value="">All</option>
-        {% for cuisine in cuisines %}
-            <option value="{{ cuisine }}">{{ cuisine }}</option>
-        {% endfor %}
-    </select><br>
-
-    <h2>Or Search By Specific Ingredient from your Pantry</h2>
-        <!-- make it so the user pantry item goes into this box automatically -->
-    <label for="ingredients">Ingredients:</label>
-    <input type="text" id="ingredients" name="ingredients" value="{{ ingredient_name }}"><br>
-
-    <input type="submit" class="btn btn-custom" value="Search">
-</form>
-
-<div class="row">
-    {% for recipe in recipes %}
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <a href="/recipes/{{ recipe.id }}">
-                    <img src="{{ recipe.image }}" class="card-img-top" alt="{{ recipe.title }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ recipe.title | safe }}</h5>
-                    </div>
-                </a>
+            <div class="col-md-6">
+                <label for="cuisineSelect">Cuisine:</label>
+                <select name="cuisine" id="cuisineSelect" class="form-control">
+                    <option value="">All</option>
+                    {% for cuisine in cuisines %}
+                        <option value="{{ cuisine }}">{{ cuisine }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
-    {% endfor %}
+
+        <div class="col-md-12 mt-3">
+            <label for="ingredients">Ingredients:</label>
+            <input type="text" id="ingredients" name="ingredients" value="{{ ingredient_name }}" class="form-control">
+        </div>
+
+        <div class="col-md-12 mt-3">
+            <input type="submit" class="btn btn-custom" value="Search">
+        </div>
+    </form>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        {% for recipe in recipes %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card">
+                    <a href="/recipes/{{ recipe.id }}">
+                        <img src="{{ recipe.image }}" class="card-img-top" alt="{{ recipe.title }}">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ recipe.title | safe }}</h5>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 </div>
 
 <script src="/static/script.js"></script>
