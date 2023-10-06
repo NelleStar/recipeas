@@ -8,7 +8,7 @@ class TestApp(unittest.TestCase):
         """Set up a testing client and configure the app."""
         app.config['TESTING'] = True
         app.config['DEBUG'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipes_test'  # Use a separate test database
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipes_test' 
         app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF protection in forms during testing
         self.client = app.test_client()
 
